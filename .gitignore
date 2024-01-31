@@ -5,3 +5,5 @@ src/ai_model/__pycache__
 src/name_generator/__pycache__
 
 settings/network.yaml
+
+dataset/
