@@ -1,0 +1,13 @@
+drive-parameters-ranges:
+  drive:
+    max-forward: 255
+    max-backward: -255
+    standard-forward: 90
+    standard-backward: -90
+    stop: 0
+  turn:
+    max-right: 27
+    slight-right: 5
+    max-left: -27
+    slight-left: -5
+    center: 0
