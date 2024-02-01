@@ -15,9 +15,9 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import requests
 
-from neural_network_model import NeuralNetworkModel
-
+sys.path.append(os.path.abspath(str(Path(__file__).parent)))
 sys.path.append(os.path.abspath(str(Path(__file__).parent.parent)))
+from neural_network_model import NeuralNetworkModel
 from date_to_str import DateToStr, DateNameType
 from commandline_args_parser import CommandLineArgsParser
 
@@ -48,8 +48,11 @@ class ModelHandler:
             self._create_data_loaders()
             self._init_model()
         if commandline_args_parser.get_mode() == "run":
-            is_model_loaded = self._load_model(commandline_args_parser.get_model())
-            print(is_model_loaded)
+            model_name = commandline_args_parser.get_model()
+            try:
+                self._load_model(model_name)
+            except FileNotFoundError as ex:
+                raise ex
 
 
     def _set_workspace(self):
@@ -213,20 +216,20 @@ class ModelHandler:
         filename = f"epochs_{self._epochs_amount}_batch_{self._batch_size}_{name_based_on_time}.pt"
         model_path = self._path_to_models_directory + filename
 
+        self._set_workspace()
         torch.save(self._model, model_path)
         print(f"Model saved in {model_path}")
 
 
     def _load_model(self, model_name: str="") -> bool:
+        self._set_workspace()
         path = self._path_to_models_directory + model_name
         try:
             self._model = torch.load(path)
-        except FileNotFoundError:
-            print("Model does not exist!")
-            return False
+        except FileNotFoundError as ex:
+            raise ex
 
         self._model.eval()
-        return True
 
 
 if __name__ == "__main__":

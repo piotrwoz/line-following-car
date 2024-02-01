@@ -47,8 +47,8 @@ class CommandLineArgsParser:
         batch_help = """Specify batch size. Required only when mode is 'train'.
         Positive integer required."""
         time_help = """Specify time of driving robotic-car in seconds. Positive integer required"""
-        model_help = """Specify name of the trained neural network model for use. 
-        It has to be *.pt file. File with trained model should be stored in 
+        model_help = """Specify name of the trained neural network model for use.
+        It has to be *.pt file. File with trained model should be stored in
         ./src/ai_model_trained_models/ directory"""
         music_help = """Specify if music should be played when car is started.
         Possible values: 'true'/'on' or 'false'/'off'"""
@@ -63,6 +63,7 @@ class CommandLineArgsParser:
             self._args.music = True
         else:
             exception_str = "'true', 'on', 'false' or 'off' argument value expected"
+            self._args.music = False
             raise argparse.ArgumentTypeError(exception_str)
 
 
@@ -142,7 +143,7 @@ class CommandLineArgsParser:
         Time getter.
         """
         return self._args.time
-    
+
     def get_model(self):
         """
         Trained model getter.
