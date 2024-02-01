@@ -1,24 +1,34 @@
 """
-In this source file there are class class NameGenerator which is accountable of generating
-new filenames based on current date and time.
+In this source file there is class DateToStr which is accountable of parsing current date
+to string. User can specify details of date using DateNameType enum value as a method
+parameter.
 """
 
+from enum import Enum
 from datetime import datetime
 
-from date_name_type import DateNameType
+
+class DateNameType(Enum):
+    """
+    NameDateType enum represents types of available file names formats
+    of robotic car.
+    """
+    DATE_HOUR_MINUTE_SECONDS = 0
+    DATE_HOUR_MINUTE = 1
+    DATE = 2
 
 
-class NameGenerator:
+class DateToStr:
     """
     Class is responsible for generating new file names depends on actual time. 
     """
     @staticmethod
-    def create_name(name_format: DateNameType) -> str:
+    def parse_date(name_format: DateNameType) -> str:
         """
         Method creats new file name based on current date and time.
         """
         current_time = datetime.now()
-        filename = None
+        filename = ""
         match name_format:
             case DateNameType.DATE_HOUR_MINUTE_SECONDS:
                 day_part = current_time.strftime("%Y_%m_%d")
@@ -36,5 +46,5 @@ class NameGenerator:
 
 
 if __name__ == "__main__":
-    print(NameGenerator.create_name(DateNameType.DATE_HOUR_MINUTE_SECONDS))
-    print(NameGenerator.create_name(DateNameType.DATE_HOUR_MINUTE))
+    print(DateToStr.parse_date(DateNameType.DATE_HOUR_MINUTE_SECONDS))
+    print(DateToStr.parse_date(DateNameType.DATE_HOUR_MINUTE))
