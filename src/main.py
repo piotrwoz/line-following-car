@@ -5,12 +5,11 @@ Main app entry point.
 import sys
 from pathlib import Path
 
+from session import Session
 MAIN_WORKSPACE = str(Path(__file__).parent)
 sys.path.append(MAIN_WORKSPACE)
 sys.path.append(MAIN_WORKSPACE + "\\ai_model")
 sys.path.append(MAIN_WORKSPACE + "\\settings_readers")
-
-from session import Session
 
 
 def main():

@@ -11,11 +11,12 @@ class SteeringCommand(Enum):
     of robotic car.
     """
 
-    STOP = 0
-    FORWARD = 1
-    BACK = 2
-    RIGHT = 3
-    SLIGHT_RIGHT = 4
+    START = 0
+    STOP = 1
+    FORWARD = 2
+    BACK = 3
+    RIGHT = 4
     LEFT = 5
-    SLIGHT_LEFT = 6
-    CENTER_WHEELS = 7
+    CENTER_WHEELS = 6
+    SLIGHT_RIGHT = 7
+    SLIGHT_LEFT = 8

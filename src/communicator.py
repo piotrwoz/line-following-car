@@ -20,59 +20,114 @@ class Communicator:
     """
 
     def __init__(self):
+        self._import_from_network_settings()
+        self._import_from_drive_settings()
+        self._import_from_requests_settings()
+        self._set_url_bases()
+
+        self._last_command = None
+        self._is_wheels_centered = True
+        self._is_driving_forward = False
+        self._is_driving_backward = False
+
+        self._offset = 8
+
+        self._path_to_dataset = "../../dataset/"
+
+
+    def _import_from_network_settings(self):
         network_settings_reader = NetworkSettingsReader()
         network_settings_reader.read()
         self._ipv4 = network_settings_reader.get_ipv4()
 
+
+    def _import_from_drive_settings(self):
         drive_settings_reader = DriveSettingsReader()
         drive_settings_reader.read()
-        self._offset = 8
         self._max_forward = drive_settings_reader.get_max_forward()
         self._standard_forward = drive_settings_reader.get_standard_forward()
         self._max_backward = drive_settings_reader.get_max_backward()
         self._standard_backward = drive_settings_reader.get_standard_backward()
         self._stop = drive_settings_reader.get_stop()
         self._max_turn_right = drive_settings_reader.get_max_turn_right()
+        self._slight_turn_right = drive_settings_reader.get_slight_turn_right()
         self._max_turn_left = drive_settings_reader.get_max_turn_left()
+        self._slight_turn_left = drive_settings_reader.get_slight_turn_left()
         self._center = drive_settings_reader.get_center()
 
-        self._url = f"http://{self._ipv4}"
-        self._drive_url = f"{self._url}/drive?speed="
-        self._turn_url = f"{self._url}/drive?turn="
-        self._photo_url = f"{self._url}/photo"
 
+    def _import_from_requests_settings(self):
         requests_settings_reader = RequestsSettingsReader()
         requests_settings_reader.read()
         self._request_timeout = requests_settings_reader.get_request_timeout()
 
-        self._path_to_dataset = "../../dataset/"
+
+    def _set_url_bases(self):
+        self._url = f"http://{self._ipv4}"
+        self._drive_url = f"{self._url}/drive?speed="
+        self._turn_url = f"{self._url}/drive?turn="
+        self._photo_url = f"{self._url}/photo"
 
 
     def send_request(self, command: SteeringCommand):
         """
         Interface of possible steering commands that change robotic car movement.
         """
-        match command:
-            case SteeringCommand.STOP:
-                self.stop()
-            case SteeringCommand.FORWARD:
-                self.center_wheels()
-                self.drive(self._standard_forward)
-            case SteeringCommand.BACK:
-                self.center_wheels()
-                self.drive(self._standard_backward)
-            case SteeringCommand.RIGHT:
-                self.turn(command)
-            case SteeringCommand.SLIGHT_RIGHT:
-                self.turn(command)
-            case SteeringCommand.LEFT:
-                self.turn(command)
-            case SteeringCommand.SLIGHT_LEFT:
-                self.turn(command)
-            case SteeringCommand.CENTER_WHEELS:
-                self.center_wheels()
-            case _:
-                print("Unknown request type")
+        if command != self._last_command:
+            self._last_command = command
+            match command:
+                case SteeringCommand.START:
+                    self.start_drive()
+                case SteeringCommand.STOP:
+                    self.stop_drive()
+                case SteeringCommand.FORWARD:
+                    self.forward_drive()
+                case SteeringCommand.BACK:
+                    self.back_drive()
+                case SteeringCommand.RIGHT:
+                    self.turn(command)
+                case SteeringCommand.SLIGHT_RIGHT:
+                    self.turn(command)
+                case SteeringCommand.LEFT:
+                    self.turn(command)
+                case SteeringCommand.SLIGHT_LEFT:
+                    self.turn(command)
+                case SteeringCommand.CENTER_WHEELS:
+                    self.center_wheels()
+                case _:
+                    print("Unknown request type")
+
+
+    def start_drive(self):
+        """Handle starting robotic car drive: start driving straight and set proper flags."""
+        self.drive(self._standard_forward)
+        self._is_driving_forward = True
+        self._is_driving_backward = False
+
+
+    def stop_drive(self):
+        """Handle stopping robotic car drive: start driving straight and set proper flags."""
+        self.drive(self._standard_forward)
+        self._is_driving_forward = True
+        self._is_driving_backward = False
+
+
+    def forward_drive(self):
+        """Handle forward drive: start driving straight and set proper flags."""
+        if not self._is_wheels_centered:
+            self.center_wheels()
+        if not self._is_driving_forward:
+            self.drive(self._standard_forward)
+            self._is_driving_forward = True
+            self._is_driving_backward = False
+
+
+    def back_drive(self):
+        """Handle back drive: start driving back and set proper flags."""
+        if not self._is_driving_backward:
+            self.drive(self._standard_backward)
+            self._is_driving_forward = False
+            self._is_driving_backward = True
 
 
     def drive(self, speed_parameter: int):
@@ -97,6 +152,7 @@ class Communicator:
         """
         Method responsible for sending GET request with turn type parameter.
         """
+        self._is_wheels_centered = False
         turn_parameter = self._map_turn_car_command(command)
         turn_parameter = self._turn_parameter_mapper(turn_parameter)
         url_to_send = f"{self._turn_url}{turn_parameter}"
@@ -109,11 +165,11 @@ class Communicator:
             case SteeringCommand.RIGHT:
                 turn_parameter = self._max_turn_right
             case SteeringCommand.SLIGHT_RIGHT:
-                turn_parameter = int(self._max_turn_right / 2)
+                turn_parameter = self._slight_turn_right
             case SteeringCommand.LEFT:
                 turn_parameter = self._max_turn_left
             case SteeringCommand.SLIGHT_LEFT:
-                turn_parameter = int(self._max_turn_left / 2)
+                turn_parameter = self._slight_turn_left
             case _:
                 turn_parameter = 0
 
@@ -124,6 +180,7 @@ class Communicator:
         """
         Method responsible for sending GET request for straighten the robotic car wheels.
         """
+        self._is_wheels_centered = True
         turn_parameter = self._turn_parameter_mapper(self._center)
         url_to_send = f"{self._turn_url}{turn_parameter}"
         self._send_get_request(url_to_send, turn_parameter)
@@ -143,7 +200,6 @@ class Communicator:
         try:
             requests.get(url = url_to_send, params = parameter, timeout = self._request_timeout)
         except requests.Timeout:
-            self._stop()
             print(f"TIMEOUT when sending {url_to_send} request")
 
 
@@ -154,9 +210,9 @@ class Communicator:
         """
         try:
             response = requests.get(
-                url = self._photo_url,
+                url=self._photo_url,
                 timeout=self._request_timeout,
-                stream = True
+                stream=True
             )
             return response
         except requests.Timeout:
@@ -178,9 +234,9 @@ class Communicator:
 
 
     def _save_photo_on_disc(self, response: requests.Response, subdirectory_to_store: str):
-        name_based_on_date = DateToStr.create_name(DateNameType.DATE_HOUR_MINUTE_SECONDS)
+        name_based_on_date = DateToStr.parse_date(DateNameType.DATE_HOUR_MINUTE_SECONDS)
         filename = f"img_{name_based_on_date}.jpg"
-        subdirectory_to_store = self._fix_separatorin_subdirectory(subdirectory_to_store)
+        subdirectory_to_store = self._fix_separator_in_subdirectory(subdirectory_to_store)
         directory_path =  f"{self._path_to_dataset}{subdirectory_to_store}"
         self._create_dataset_directory(directory_path)
         path = f"{directory_path}{filename}"
@@ -190,7 +246,7 @@ class Communicator:
                 print(f'Sucessfully taken photo: {filename}')
 
 
-    def _fix_separatorin_subdirectory(self, subdirectory: str) -> str:
+    def _fix_separator_in_subdirectory(self, subdirectory: str) -> str:
         if subdirectory[-1] != "/":
             subdirectory = subdirectory + "/"
 
@@ -200,6 +256,11 @@ class Communicator:
     def _create_dataset_directory(self, directory: str):
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+
+    def get_last_command(self) -> SteeringCommand:
+        """Last steering command getter."""
+        return self._last_command
 
 
 if __name__ == "__main__":

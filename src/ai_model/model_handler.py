@@ -3,7 +3,6 @@ ModelHandler class is responsible for handling AI model.
 """
 
 import os
-import sys
 from pathlib import Path
 from io import BytesIO
 from PIL import Image, ImageFile
@@ -15,9 +14,9 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import requests
 
-sys.path.append(os.path.abspath(str(Path(__file__).parent)))
-sys.path.append(os.path.abspath(str(Path(__file__).parent.parent)))
 from neural_network_model import NeuralNetworkModel
+from predicted_class import PredictedClass
+from label_class_mapper import LabelClassMapper
 from date_to_str import DateToStr, DateNameType
 from commandline_args_parser import CommandLineArgsParser
 
@@ -194,7 +193,7 @@ class ModelHandler:
         print(f"    Avg test loss: {avg_test_loss:.4f}")
 
 
-    def classify_image(self, response: requests.models.Response) -> str:
+    def classify_image(self, response: requests.models.Response) -> PredictedClass:
         """Image classification based on trained model."""
         image = Image.open(BytesIO(response.content)).convert('RGB')
         image = self._transform(image).unsqueeze(0).to(self._device)
@@ -208,7 +207,9 @@ class ModelHandler:
         predicted_class = predicted_class.item()
 
         predicted_label = self._train_dataset.classes[predicted_class]
-        return predicted_label
+        predicted = LabelClassMapper.map_label_to_class(predicted_label)
+
+        return predicted
 
 
     def _save_model(self):

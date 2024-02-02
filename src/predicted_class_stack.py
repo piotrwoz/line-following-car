@@ -8,9 +8,8 @@ from predicted_class import PredictedClass
 
 class PredictedClassStack:
     """
-    Class is responsible for main app session. It calls training model,
-    creates object responsible for communication with robotic car and 
-    steers robotic car.
+    Class is representing stack for next predicted labels of classified photos
+    from robotic car.
     """
 
     def __init__(self):
@@ -20,7 +19,7 @@ class PredictedClassStack:
 
     def push(self, predicted_class: PredictedClass):
         """
-        Push predicted classes on top of the stack.
+        Push predicted class on top of the stack.
         """
         self._stack.insert(0, predicted_class)
         if len(self._stack) > self._max_size:
@@ -55,6 +54,13 @@ class PredictedClassStack:
         Last pushed predicted class getter.
         """
         return self._stack[0]
+
+
+    def get_stack_second_element(self):
+        """
+        Previously pushed predicted class getter.
+        """
+        return self._stack[1]
 
 
     def get_stack(self):
