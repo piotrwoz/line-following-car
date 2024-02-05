@@ -4,6 +4,7 @@ Communicator class is responsible for communication between computer and robotic
 
 import os
 import shutil
+import time
 import requests
 
 from settings_readers.network_settings_reader import NetworkSettingsReader
@@ -31,6 +32,7 @@ class Communicator:
         self._is_driving_backward = False
 
         self._offset = 8
+        self._turn_sleep_s = 0.15
 
         self._path_to_dataset = "../../dataset/"
 
@@ -73,33 +75,33 @@ class Communicator:
         """
         Interface of possible steering commands that change robotic car movement.
         """
-        if command != self._last_command:
-            self._last_command = command
-            match command:
-                case SteeringCommand.START:
-                    self.start_drive()
-                case SteeringCommand.STOP:
-                    self.stop_drive()
-                case SteeringCommand.FORWARD:
-                    self.forward_drive()
-                case SteeringCommand.BACK:
-                    self.back_drive()
-                case SteeringCommand.RIGHT:
-                    self.turn(command)
-                case SteeringCommand.SLIGHT_RIGHT:
-                    self.turn(command)
-                case SteeringCommand.LEFT:
-                    self.turn(command)
-                case SteeringCommand.SLIGHT_LEFT:
-                    self.turn(command)
-                case SteeringCommand.CENTER_WHEELS:
-                    self.center_wheels()
-                case _:
-                    print("Unknown request type")
+        self._last_command = command
+        match command:
+            case SteeringCommand.START:
+                self.start_drive()
+            case SteeringCommand.STOP:
+                self.stop_drive()
+            case SteeringCommand.FORWARD:
+                self.forward_drive()
+            case SteeringCommand.BACK:
+                self.back_drive()
+            case SteeringCommand.RIGHT:
+                self.turn(command)
+            case SteeringCommand.SLIGHT_RIGHT:
+                self.turn(command)
+            case SteeringCommand.LEFT:
+                self.turn(command)
+            case SteeringCommand.SLIGHT_LEFT:
+                self.turn(command)
+            case SteeringCommand.CENTER_WHEELS:
+                self.center_wheels()
+            case _:
+                print("Unknown request type")
 
 
     def start_drive(self):
         """Handle starting robotic car drive: start driving straight and set proper flags."""
+        self.center_wheels()
         self.drive(self._standard_forward)
         self._is_driving_forward = True
         self._is_driving_backward = False
@@ -107,8 +109,9 @@ class Communicator:
 
     def stop_drive(self):
         """Handle stopping robotic car drive: start driving straight and set proper flags."""
-        self.drive(self._standard_forward)
-        self._is_driving_forward = True
+        self.stop()
+        self.center_wheels()
+        self._is_driving_forward = False
         self._is_driving_backward = False
 
 
@@ -124,6 +127,7 @@ class Communicator:
 
     def back_drive(self):
         """Handle back drive: start driving back and set proper flags."""
+        self.drive(self._standard_backward)
         if not self._is_driving_backward:
             self.drive(self._standard_backward)
             self._is_driving_forward = False
@@ -156,6 +160,7 @@ class Communicator:
         turn_parameter = self._map_turn_car_command(command)
         turn_parameter = self._turn_parameter_mapper(turn_parameter)
         url_to_send = f"{self._turn_url}{turn_parameter}"
+        time.sleep(self._turn_sleep_s)
         self._send_get_request(url_to_send, turn_parameter)
 
 
@@ -265,4 +270,6 @@ class Communicator:
 
 if __name__ == "__main__":
     communicator = Communicator()
-    communicator.take_photo_and_save("../dataset")
+    for _ in range(0, 20):
+        communicator.take_photo_and_save("../dataset/train/thrash")
+        time.sleep(1)

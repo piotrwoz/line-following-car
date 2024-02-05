@@ -9,7 +9,7 @@ Software of line following robotic car made as an project for deep reinforcement
 Python modules:
 
 * pyTorch
-* requests
+* pyGame
 * yaml
 
 ## Usage

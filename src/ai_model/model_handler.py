@@ -14,7 +14,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import requests
 
-from neural_network_model import NeuralNetworkModel
+from ai_model.neural_network_model import NeuralNetworkModel
 from predicted_class import PredictedClass
 from label_class_mapper import LabelClassMapper
 from date_to_str import DateToStr, DateNameType
@@ -36,13 +36,12 @@ class ModelHandler:
 
         self._path_to_models_directory = "trained_models/"
 
+        self._define_transform()
+        self._load_datasets()
+        self._classes_amount = len(self._train_dataset.classes)
         if commandline_args_parser.get_mode() == "train":
-            self._define_transform()
-            self._load_datasets()
-
             self._epochs_amount = commandline_args_parser.get_epochs()
             self._batch_size = commandline_args_parser.get_batch()
-            self._classes_amount = len(self._train_dataset.classes)
 
             self._create_data_loaders()
             self._init_model()

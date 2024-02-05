@@ -4,7 +4,7 @@ RequestsSettingsReader class is responsible for reading requests settings from .
 
 import yaml
 
-from settings_reader import SettingsReader
+from settings_readers.settings_reader import SettingsReader
 
 
 class RequestsSettingsReader(SettingsReader):

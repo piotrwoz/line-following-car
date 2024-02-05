@@ -4,7 +4,7 @@ NetworkSettingsReader class is responsible for reading drive parameters settings
 
 import yaml
 
-from settings_reader import SettingsReader
+from settings_readers.settings_reader import SettingsReader
 
 
 class DriveSettingsReader(SettingsReader):

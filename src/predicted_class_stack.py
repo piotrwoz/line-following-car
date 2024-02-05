@@ -14,7 +14,7 @@ class PredictedClassStack:
 
     def __init__(self):
         self._stack = list()
-        self._max_size = 2
+        self._max_size = 5
 
 
     def push(self, predicted_class: PredictedClass):
@@ -49,21 +49,23 @@ class PredictedClassStack:
         print("")
 
 
-    def get_stack_top(self):
+    def get_stack_top(self) -> PredictedClass:
         """
         Last pushed predicted class getter.
         """
         return self._stack[0]
 
 
-    def get_stack_second_element(self):
+    def get_last_non_thrash_class(self) -> PredictedClass:
         """
-        Previously pushed predicted class getter.
+        Last non thrash image predicted class getter.
         """
-        return self._stack[1]
+        for elem in self._stack:
+            if elem != PredictedClass.THRASH_IMAGE:
+                return elem
 
 
-    def get_stack(self):
+    def get_stack(self) -> list:
         """
         Predicted classes stack getter.
         """

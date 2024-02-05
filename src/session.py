@@ -88,13 +88,12 @@ class Session:
             print(f"Predicted class: {predicted_class.name}")
 
             self._predicted_class_stack.push(predicted_class)
-            self._send_commands_based_on_label(predicted_class)
+            self._send_commands_based_on_predicted_class(predicted_class)
         else:
             print("No response")
 
 
-
-    def _send_commands_based_on_label(self, predicted_class: str):
+    def _send_commands_based_on_predicted_class(self, predicted_class: str):
         match predicted_class:
             case PredictedClass.FORWARD:
                 self._communicator.send_request(SteeringCommand.FORWARD)
@@ -112,20 +111,25 @@ class Session:
                 if self._predicted_class_stack.check_if_stack_contains_only_thrash():
                     self._communicator.send_request(SteeringCommand.STOP)
                 else:
-                    previous_command = self._predicted_class_stack.get_stack_second_element()
-                    self._communicator.send_request(previous_command)
+                    previous_command = self._predicted_class_stack.get_last_non_thrash_class()
+                    if previous_command != PredictedClass.FORWARD:
+                        self._communicator.send_request(SteeringCommand.FORWARD)
+                    if previous_command is not None:
+                        self._communicator.send_request(previous_command)
+                    else:
+                        self._communicator.send_request(SteeringCommand.STOP)
+
             case _:
                 print("Unknown class predicted. Turning off robotic car.")
                 self._turn_off_car()
 
 
     def _turn_on_car(self):
-        self._communicator.send_request(SteeringCommand.CENTER_WHEELS)
+        self._communicator.send_request(SteeringCommand.START)
 
 
     def _turn_off_car(self):
         self._communicator.send_request(SteeringCommand.STOP)
-        self._communicator.send_request(SteeringCommand.CENTER_WHEELS)
 
 
     def _check_if_play_music(self):
